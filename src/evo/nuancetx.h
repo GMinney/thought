@@ -1,0 +1,234 @@
+// Copyright (c) 2018-2025 Thought Network Ltd
+
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef THOUGHT_EVO_NUANCETX_H
+#define THOUGHT_EVO_NUANCETX_H
+
+#include <bls/bls.h>
+#include <consensus/validation.h>
+#include <primitives/transaction.h>
+
+#include <netaddress.h>
+#include <pubkey.h>
+#include <univalue.h>
+
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+
+class CBlockIndex;
+class CCoinsViewCache;
+
+// Create/Register nuance
+class CNuRegTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance Registration Fields
+    CNetAddr ipAddress;
+    boost::uuids::uuid mcpId;
+    uint16_t version;    
+    std::vector<unsigned char> name; // string
+    uint256 conceptId; // URI
+    uint256 hash; // hash of concept
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(name);
+        READWRITE(conceptId);
+        READWRITE(hash);
+    }
+
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+// Remove/Unregister nuance
+class CNuUnregTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance Unregister Fields
+    CNetAddr ipAddress;
+    boost::uuids::uuid mcpId;
+    uint16_t version;    
+    uint256 nuanceId; // URI
+    std::vector<unsigned char> action; // Enum
+    std::vector<unsigned char> postAction; // Enum
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(action);
+        READWRITE(postAction);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+// Transfer nuance ownership
+class CNuXferTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance transfer Fields
+    CNetAddr ipAddress;
+    boost::uuids::uuid mcpId;
+    uint16_t version;    
+    uint256 nuanceId; // URI
+    uint256 toWallet; // address/hash
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(toWallet);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+// Checkpoint nuance
+class CNuCheckTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance Checkpoint Fields
+    CNetAddr ipAddress;
+    boost::uuids::uuid mcpId;
+    uint16_t version;    
+    uint256 nuanceId; // URI
+    uint256 hash; // hash of concept
+    bool nuanceSatisfied; // bool
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(hash);
+        READWRITE(nuanceSatisfied);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+// Authorize nuance user
+class CNuAuthTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance Authorization Fields
+    CNetAddr ipAddress;
+    boost::uuids::uuid mcpId;
+    uint16_t version;    
+    uint256 nuanceId; // URI
+    uint256 authorizeWallet; // address/hash
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(authorizeWallet);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+// Revoke authorization
+class CNuRevAuthTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance revoke authorization Fields
+    CNetAddr ipAddress;
+    boost::uuids::uuid mcpId;
+    uint16_t version;    
+    uint256 nuanceId; // URI
+    uint256 revokeWallet; // address/hash
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(revokeWallet);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+bool CheckNuRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckNuUnregTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckNuXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckNuCheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckNuAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+bool CheckNuRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);
+
+#endif // THOUGHT_EVO_NUANCETX_H
