@@ -2,38 +2,43 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/deterministicmns.h>
-#include <evo/mcptx.h>
-#include <evo/specialtx.h>
+#include "deterministicmns.h"
+#include "specialtx.h"
+#include "mcptx.h"
 
-#include <chainparams.h>
-#include <clientversion.h>
-#include <coins.h>
-#include <hash.h>
-#include <messagesigner.h>
-#include <script/standard.h>
-#include <validation.h>
+#include "base58.h"
+#include "chainparams.h"
+#include "clientversion.h"
+#include "core_io.h"
+#include "hash.h"
+#include "messagesigner.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "univalue.h"
+#include "validation.h"
+
+#include <boost/url/urls.hpp>
 
 template <typename McpTx>
 static bool CheckService(const uint256& mcpTxHash, const McpTx& mcpTx, CValidationState& state)
 {
-    if (!mcpTx.addr.IsValid()) {
+    if (!mcpTx.ipAddress.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr");
     }
-    if (Params().RequireRoutableExternalIP() && !mcpTx.addr.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && !mcpTx.ipAddress.IsRoutable()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr");
     }
 
     static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (mcpTx.addr.GetPort() != mainnetDefaultPort) {
+        if (mcpTx.ipAddress.GetPort() != mainnetDefaultPort) {
             return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr-port");
         }
-    } else if (mcpTx.addr.GetPort() == mainnetDefaultPort) {
+    } else if (mcpTx.ipAddress.GetPort() == mainnetDefaultPort) {
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr-port");
     }
 
-    if (!mcpTx.addr.IsIPv4() && !mcpTx.addr.IsIPv6()) {
+    if (!mcpTx.ipAddress.IsIPv4() && !mcpTx.ipAddress.IsIPv6()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr");
     }
 
@@ -93,9 +98,12 @@ bool CheckMcpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
     }
 
+    // version check
     if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
+
+
 
     // need to check
 

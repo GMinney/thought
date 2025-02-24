@@ -16,6 +16,9 @@
 
 #include "llmq/quorums_blockprocessor.h"
 #include "llmq/quorums_commitment.h"
+#include "concepttx.h"
+#include "nuancetx.h"
+#include "mcptx.h"
 
 bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {

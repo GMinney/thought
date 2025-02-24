@@ -16,6 +16,7 @@
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+#include <boost/url/urls.hpp>
 
 class CBlockIndex;
 class CCoinsViewCache;
@@ -29,9 +30,9 @@ public:
 public:
     // MCP Registration Fields
     CNetAddr ipAddress;
-    std::vector<unsigned char> mcpId; // URI 
+    boost::core::string_view mcpId;
     uint16_t version;
-    std::vector<unsigned char> name; // string
+    std::vector<unsigned char> name;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -50,53 +51,31 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
+
+
 // Unregister MCP 
 class CMcpUnregTx
 {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
+    enum McpUnregAction {
+        KILL = 0
+    };
+
+    enum McpUnregPostAction {
+        DELETE = 0,
+        RETURN_TO_ORIGIN = 1,
+        ARCHIVE = 2
+    };
+
 public:
     // MCP Unregister Fields
     CNetAddr ipAddress;
-    uint16_t version;    
-    std::vector<unsigned char> mcpId; // URI
-    std::vector<unsigned char> action; // enum
-    std::vector<unsigned char> postAction; // enum
-
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(ipAddress);
-        READWRITE(mcpId); // conflict
-        READWRITE(mcpId); // conflict
-        READWRITE(action);
-        READWRITE(postAction);
-    }
-
-public:
-    std::string ToString() const;
-
-    void ToJson(UniValue& obj) const;
-};
-
-// Transfer MCP ownership
-class CMcpXferTx
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
-
-public:
-    // MCP Transfer Fields
-    CNetAddr ipAddress;
-    std::vector<unsigned char> mcpId; // URI
-    uint16_t version;    
-    std::vector<unsigned char> nuanceId; // URI
-    uint256 toWallet; // address/hash
-
+    boost::core::string_view mcpId;
+    uint16_t version;
+    McpUnregAction action;
+    McpUnregPostAction postAction;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -107,8 +86,8 @@ public:
         READWRITE(ipAddress);
         READWRITE(mcpId);
         READWRITE(version);
-        READWRITE(nuanceId);
-        READWRITE(toWallet);
+        READWRITE(action);
+        READWRITE(postAction);
     }
 
 public:
@@ -116,6 +95,8 @@ public:
 
     void ToJson(UniValue& obj) const;
 };
+
+
 
 // Authorize MCP user
 class CMcpAuthTx
@@ -126,11 +107,10 @@ public:
 public:
     // MCP Authorization Fields
     CNetAddr ipAddress;
-    std::vector<unsigned char> mcpId; // URI
+    boost::core::string_view mcpId; // URI
     uint16_t version;    
-    std::vector<unsigned char> nuanceId; // URI
+    boost::core::string_view nuanceId; // URI
     uint256 authorizeWallet; // address/hash
-
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -151,6 +131,43 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
+
+
+// Revoke authorization
+class CMcpRevAuthTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // MCP Revoke Auth Fields
+    CNetAddr ipAddress;
+    boost::core::string_view mcpId;
+    uint16_t version;
+    boost::core::string_view nuanceId;
+    uint256 revokeWallet; 
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(revokeWallet);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+
+
 // Revoke authorization
 class CMcpCheckTx
 {
@@ -160,11 +177,11 @@ public:
 public:
     // MCP Checkpoint Fields
     CNetAddr ipAddress;
-    std::vector<unsigned char> mcpId; // URI
-    uint16_t version;    
-    std::vector<unsigned char> nuanceId; // txid - hash
-    uint256 hash; // hash of concept
-    bool nuanceSatisfied; // bool
+    boost::core::string_view mcpId;
+    uint16_t version;
+    boost::core::string_view nuanceId;
+    uint256 hash;
+    bool nuanceSatisfied;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -186,19 +203,22 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-// Revoke authorization
-class CMcpRevAuthTx
+
+
+// Transfer MCP ownership
+class CMcpXferTx
 {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
 public:
-    // MCP Revoke Auth Fields
+    // MCP Transfer Fields
     CNetAddr ipAddress;
-    std::vector<unsigned char> mcpId; // URI
-    uint16_t version;    
-    std::vector<unsigned char> nuanceId; // URI
-    uint256 revokeWallet; // address/hash
+    boost::core::string_view mcpId;
+    uint16_t version;
+    boost::core::string_view nuanceId;
+    uint256 toWallet;
+
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -210,7 +230,7 @@ public:
         READWRITE(mcpId);
         READWRITE(version);
         READWRITE(nuanceId);
-        READWRITE(revokeWallet);
+        READWRITE(toWallet);
     }
 
 public:

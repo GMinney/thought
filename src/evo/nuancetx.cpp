@@ -2,38 +2,43 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/deterministicmns.h>
-#include <evo/nuancetx.h>
-#include <evo/specialtx.h>
+#include "deterministicmns.h"
+#include "specialtx.h"
+#include "nuancetx.h"
 
-#include <chainparams.h>
-#include <clientversion.h>
-#include <coins.h>
-#include <hash.h>
-#include <messagesigner.h>
-#include <script/standard.h>
-#include <validation.h>
+#include "base58.h"
+#include "chainparams.h"
+#include "clientversion.h"
+#include "core_io.h"
+#include "hash.h"
+#include "messagesigner.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "univalue.h"
+#include "validation.h"
+
+#include <boost/url/urls.hpp>
 
 template <typename NuanceTx>
 static bool CheckService(const uint256& nuanceTxHash, const NuanceTx& nuanceTx, CValidationState& state)
 {
-    if (!nuanceTx.addr.IsValid()) {
+    if (!nuanceTx.ipAddress.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr");
     }
-    if (Params().RequireRoutableExternalIP() && !nuanceTx.addr.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && !nuanceTx.ipAddress.IsRoutable()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr");
     }
 
     static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (nuanceTx.addr.GetPort() != mainnetDefaultPort) {
+        if (nuanceTx.ipAddress.GetPort() != mainnetDefaultPort) {
             return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr-port");
         }
-    } else if (nuanceTx.addr.GetPort() == mainnetDefaultPort) {
+    } else if (nuanceTx.ipAddress.GetPort() == mainnetDefaultPort) {
         return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr-port");
     }
 
-    if (!nuanceTx.addr.IsIPv4() && !nuanceTx.addr.IsIPv6()) {
+    if (!nuanceTx.ipAddress.IsIPv4() && !nuanceTx.ipAddress.IsIPv6()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr");
     }
 

@@ -2,38 +2,47 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <evo/deterministicmns.h>
-#include <evo/concepttx.h>
-#include <evo/specialtx.h>
+#include "deterministicmns.h"
+#include "specialtx.h"
+#include "concepttx.h"
 
-#include <chainparams.h>
-#include <clientversion.h>
-#include <coins.h>
-#include <hash.h>
-#include <messagesigner.h>
-#include <script/standard.h>
-#include <validation.h>
+#include "base58.h"
+#include "chainparams.h"
+#include "clientversion.h"
+#include "core_io.h"
+#include "hash.h"
+#include "messagesigner.h"
+#include "script/standard.h"
+#include "streams.h"
+#include "univalue.h"
+#include "validation.h"
+
+#include <regex>
+
+#include <boost/url/urls.hpp>
+#include <boost/url/parse.hpp>
+using namespace boost::urls;
 
 template <typename ConceptTx>
 static bool CheckService(const uint256& conceptTxHash, const ConceptTx& conceptTx, CValidationState& state)
 {
-    if (!conceptTx.addr.IsValid()) {
+    if (!conceptTx.ipAddress.IsValid()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr");
     }
-    if (Params().RequireRoutableExternalIP() && !conceptTx.addr.IsRoutable()) {
+    if (Params().RequireRoutableExternalIP() && !conceptTx.ipAddress.IsRoutable()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr");
     }
 
     static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
-        if (conceptTx.addr.GetPort() != mainnetDefaultPort) {
+        if (conceptTx.ipAddress.GetPort() != mainnetDefaultPort) {
             return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr-port");
         }
-    } else if (conceptTx.addr.GetPort() == mainnetDefaultPort) {
+    } else if (conceptTx.ipAddress.GetPort() == mainnetDefaultPort) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr-port");
     }
 
-    if (!conceptTx.addr.IsIPv4() && !conceptTx.addr.IsIPv6()) {
+    if (!conceptTx.ipAddress.IsIPv4() && !conceptTx.ipAddress.IsIPv6()) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr");
     }
 
@@ -87,29 +96,65 @@ bool CheckConRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     }
 
     CConRegTx ctx;
+
+    // payload check
     if (!GetTxPayload(tx, ctx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-payload");
     }
 
+    // ipAddress check
+    if (!ctx.ipAddress.IsIPv4() || !ctx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ip-invalid");
+    }
+    // // full service check
+    // if (!CheckService(ctx.conceptHash, ctx, state)) {
+    //     return false;
+    // }
+    
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( ctx.mcpId );
+    if (ctx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-mcpId-invalid");
+    }
+
+    // version check
     if (ctx.version == 0 || ctx.version > CConRegTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-version");
     }
 
-    if (ctx.mcpId.is_nil() || ctx.mcpId.version() != 4) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-mcpId");
+    // name check, how to check profanity?
+    if (ctx.name.size() == 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-name");
     }
 
-    if (!ctx.ipAddress.IsIPv4()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ip-not-v4");
+    // uri check for conceptId
+    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
     }
 
-    // Profanity check in name?
+    // conceptHash check - would require the retreval of the concept, then validating it
 
-    // check conceptID
-    // check conceptHash
-    // check ParentId
-    // check conceptVersion
-    // check codeLocation
+
+    // conceptParentId check
+    boost::system::result<url_view> conceptParentUri = parse_uri( ctx.conceptParentId );
+    if (ctx.conceptParentId.length() == 0 || conceptParentUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptParentId-invalid");
+    }
+
+    // conceptVersion check
+    std::string version_string(ctx.conceptVersion.begin(), ctx.conceptVersion.end());
+    std::regex pattern(R"((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))");
+    if (!std::regex_match(version_string, pattern)) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptVersion-invalid");
+    }
+
+    // codeLocation check
+    boost::system::result<url_view> codeLocationUri = parse_uri( ctx.codeLocation );
+    if (ctx.codeLocation.length() == 0 || codeLocationUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-codeLocationUri-invalid");
+    }
 
     return true;
 }

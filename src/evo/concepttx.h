@@ -16,6 +16,7 @@
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+#include <boost/url/urls.hpp>
 
 class CBlockIndex;
 class CCoinsViewCache;
@@ -29,14 +30,14 @@ public:
 public:
     // Concept Registration Fields
     CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
+    boost::core::string_view mcpId;
     uint16_t version;
-    std::vector<unsigned char> name; //string
-    uint256 conceptId; // txid - hash
-    uint256 conceptHash; // hash of concept
-    std::vector<unsigned char> conceptParentId; // URI
-    std::vector<unsigned char> conceptVersion; // String
-    std::vector<unsigned char> codeLocation; // URI
+    std::vector<unsigned char> name;
+    boost::core::string_view conceptId;
+    uint256 conceptHash;
+    boost::core::string_view conceptParentId;
+    std::vector<unsigned char> conceptVersion;
+    boost::core::string_view codeLocation;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -55,14 +56,112 @@ public:
         READWRITE(codeLocation);
     }
 
-    // When signing with the collateral key, we don't sign the hash but a generated message instead
-    // This is needed for HW wallet support which can only sign text messages as of now
-    std::string MakeSignString() const;
-
     std::string ToString() const;
 
     void ToJson(UniValue& obj) const;
 };
+
+
+
+// Remove/Unregister concept 
+class CConUnregTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+    enum ConUnregAction {
+        DELETE = 0,
+        HIDE = 1
+    };
+
+public:
+    // Concept un-register Fields
+    boost::core::string_view conceptId; 
+    std::vector<unsigned char> version; 
+    ConUnregAction action; 
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(conceptId);
+        READWRITE(version);
+        READWRITE(action);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+
+
+// Authorize concept user
+class CConAuthTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Concept user authorization Fields
+    boost::core::string_view conceptId;
+    std::vector<unsigned char> version;
+    uint256 authorizeWallet;
+
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(conceptId);
+        READWRITE(authorizeWallet);
+        READWRITE(version);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+
+
+// Revoke concept authorization
+class CConRevAuthTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Concept revoke authorization Fields
+    boost::core::string_view conceptId;
+    std::vector<unsigned char> version;
+    uint256 revokeWallet;
+
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(conceptId);
+        READWRITE(revokeWallet);
+        READWRITE(version);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+
 
 // Update concept
 class CConUpTx
@@ -72,10 +171,10 @@ public:
 
 public:
     // Concept Update Fields
-    uint256 conceptId; // txid - hash
-    uint256 conceptHash; // hash of concept
-    std::vector<unsigned char> conceptVersion; // String
-    std::vector<unsigned char> codeLocation; // URI
+    boost::core::string_view conceptId;
+    std::vector<unsigned char> conceptVersion; 
+    uint256 conceptHash;
+    boost::core::string_view codeLocation;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -95,34 +194,7 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-// Remove/Unregister concept 
-class CConUnregTx
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
 
-public:
-    // Concept un-register Fields
-    uint256 conceptId; // txid - hash
-    std::vector<unsigned char> version; // String
-    std::vector<unsigned char> action; // enum
-
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(conceptId);
-        READWRITE(version);
-        READWRITE(action);
-    }
-
-public:
-    std::string ToString() const;
-
-    void ToJson(UniValue& obj) const;
-};
 
 // Transfer concept ownership
 class CConXferTx
@@ -132,9 +204,9 @@ public:
 
 public:
     // Concept transfer Fields
-    uint256 conceptId; // URI
-    uint256 toWallet; // hash of concept
-    std::vector<unsigned char> version; // String
+    boost::core::string_view conceptId;
+    std::vector<unsigned char> version;
+    uint256 toWallet;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -144,64 +216,6 @@ public:
     {
         READWRITE(conceptId);
         READWRITE(toWallet);
-        READWRITE(version);
-    }
-
-public:
-    std::string ToString() const;
-
-    void ToJson(UniValue& obj) const;
-};
-
-// Authorize concept user
-class CConAuthTx
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
-
-public:
-    // Concept user authorization Fields
-    uint256 conceptId; // txid - hash
-    uint256 authorizeWallet; // hash of concept
-    std::vector<unsigned char> version; // String
-
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(conceptId);
-        READWRITE(authorizeWallet);
-        READWRITE(version);
-    }
-
-public:
-    std::string ToString() const;
-
-    void ToJson(UniValue& obj) const;
-};
-
-// Revoke concept authorization
-class CConRevAuthTx
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
-
-public:
-    // Concept revoke authorization Fields
-    uint256 conceptId; // txid - hash
-    uint256 revokeWallet; // hash of concept
-    std::vector<unsigned char> version; // String
-
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(conceptId);
-        READWRITE(revokeWallet);
         READWRITE(version);
     }
 

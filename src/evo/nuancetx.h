@@ -17,6 +17,7 @@
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+#include <boost/url/urls.hpp>
 
 class CBlockIndex;
 class CCoinsViewCache;
@@ -32,9 +33,9 @@ public:
     CNetAddr ipAddress;
     boost::uuids::uuid mcpId;
     uint16_t version;    
-    std::vector<unsigned char> name; // string
-    uint256 conceptId; // URI
-    uint256 hash; // hash of concept
+    std::vector<unsigned char> name; 
+    boost::core::string_view conceptId; 
+    uint256 hash; 
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -55,20 +56,32 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
+
+
 // Remove/Unregister nuance
 class CNuUnregTx
 {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
+    enum NuUnregAction {
+        KILL = 0
+    };
+
+    enum NuUnregPostAction {
+        DELETE = 0,
+        RETURN_TO_ORIGIN = 1,
+        ARCHIVE = 2
+    };
+
 public:
     // Nuance Unregister Fields
     CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
-    uint16_t version;    
-    uint256 nuanceId; // URI
-    std::vector<unsigned char> action; // Enum
-    std::vector<unsigned char> postAction; // Enum
+    boost::core::string_view mcpId;
+    uint16_t version;
+    boost::core::string_view nuanceId; 
+    NuUnregAction action; 
+    NuUnregPostAction postAction; 
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -90,19 +103,21 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-// Transfer nuance ownership
-class CNuXferTx
+
+
+// Authorize nuance user
+class CNuAuthTx
 {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
 public:
-    // Nuance transfer Fields
+    // Nuance Authorization Fields
     CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
+    boost::core::string_view mcpId;
     uint16_t version;    
-    uint256 nuanceId; // URI
-    uint256 toWallet; // address/hash
+    boost::core::string_view nuanceId; 
+    uint256 authorizeWallet; 
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -114,7 +129,7 @@ public:
         READWRITE(mcpId);
         READWRITE(version);
         READWRITE(nuanceId);
-        READWRITE(toWallet);
+        READWRITE(authorizeWallet);
     }
 
 public:
@@ -122,6 +137,43 @@ public:
 
     void ToJson(UniValue& obj) const;
 };
+
+
+
+// Revoke authorization
+class CNuRevAuthTx
+{
+public:
+    static const uint16_t CURRENT_VERSION = 1;
+
+public:
+    // Nuance revoke authorization Fields
+    CNetAddr ipAddress;
+    boost::core::string_view mcpId;
+    uint16_t version;    
+    boost::core::string_view nuanceId; 
+    uint256 revokeWallet; 
+
+public:
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(ipAddress);
+        READWRITE(mcpId);
+        READWRITE(version);
+        READWRITE(nuanceId);
+        READWRITE(revokeWallet);
+    }
+
+public:
+    std::string ToString() const;
+
+    void ToJson(UniValue& obj) const;
+};
+
+
 
 // Checkpoint nuance
 class CNuCheckTx
@@ -132,11 +184,11 @@ public:
 public:
     // Nuance Checkpoint Fields
     CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
+    boost::core::string_view mcpId;
     uint16_t version;    
-    uint256 nuanceId; // URI
-    uint256 hash; // hash of concept
-    bool nuanceSatisfied; // bool
+    boost::core::string_view nuanceId; 
+    uint256 hash; 
+    bool nuanceSatisfied; 
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -158,19 +210,21 @@ public:
     void ToJson(UniValue& obj) const;
 };
 
-// Authorize nuance user
-class CNuAuthTx
+
+
+// Transfer nuance ownership
+class CNuXferTx
 {
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
 public:
-    // Nuance Authorization Fields
+    // Nuance transfer Fields
     CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
+    boost::core::string_view mcpId;
     uint16_t version;    
-    uint256 nuanceId; // URI
-    uint256 authorizeWallet; // address/hash
+    boost::core::string_view nuanceId; 
+    uint256 toWallet;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -182,40 +236,7 @@ public:
         READWRITE(mcpId);
         READWRITE(version);
         READWRITE(nuanceId);
-        READWRITE(authorizeWallet);
-    }
-
-public:
-    std::string ToString() const;
-
-    void ToJson(UniValue& obj) const;
-};
-
-// Revoke authorization
-class CNuRevAuthTx
-{
-public:
-    static const uint16_t CURRENT_VERSION = 1;
-
-public:
-    // Nuance revoke authorization Fields
-    CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
-    uint16_t version;    
-    uint256 nuanceId; // URI
-    uint256 revokeWallet; // address/hash
-
-public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(ipAddress);
-        READWRITE(mcpId);
-        READWRITE(version);
-        READWRITE(nuanceId);
-        READWRITE(revokeWallet);
+        READWRITE(toWallet);
     }
 
 public:
