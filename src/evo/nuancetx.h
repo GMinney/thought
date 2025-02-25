@@ -31,7 +31,7 @@ public:
 public:
     // Nuance Registration Fields
     CNetAddr ipAddress;
-    boost::uuids::uuid mcpId;
+    boost::core::string_view mcpId; 
     uint16_t version;    
     std::vector<unsigned char> name; 
     boost::core::string_view conceptId; 

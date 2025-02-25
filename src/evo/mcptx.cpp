@@ -17,7 +17,12 @@
 #include "univalue.h"
 #include "validation.h"
 
+
+#include <regex>
+
 #include <boost/url/urls.hpp>
+#include <boost/url/parse.hpp>
+using namespace boost::urls;
 
 template <typename McpTx>
 static bool CheckService(const uint256& mcpTxHash, const McpTx& mcpTx, CValidationState& state)
@@ -98,21 +103,26 @@ bool CheckMcpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
     }
 
+    // ipAddress check
+    if (!mcptx.ipAddress.IsIPv4() || !mcptx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    }
+
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-
-
-    // need to check
-
-    // // TxCore Fields
-    // CNetAddr ipAddress;
-    // boost::uuids::uuid mcpId;
-    // uint16_t version;
-    // std::vector<unsigned char> name; // string
-    // std::vector<unsigned char> mcpId; // URI conflicting
+    // name check
+    if (mcptx.name.size() == 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-name");
+    }
 
     return true;
 }
@@ -128,46 +138,25 @@ bool CheckMcpUnregTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
     }
 
-    if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!mcptx.ipAddress.IsIPv4() || !mcptx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    }
+
+    // version check
+    if (mcptx.version == 0 || mcptx.version > CMcpUnregTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // need to check
+    // action check
 
-    // // TxCore Fields
-    // CNetAddr ipAddress;
-    // boost::uuids::uuid mcpId; // UUID
-    // uint16_t version;    
-    // std::vector<unsigned char> mcpId; // URI
-    // std::vector<unsigned char> action; // enum
-    // std::vector<unsigned char> postAction; // enum
-
-    return true;
-}
-
-bool CheckMcpXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
-{
-    if (tx.nType != TRANSACTION_MCP_TRANSFER) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-type");
-    }
-
-    CMcpXferTx mcptx;
-    if (!GetTxPayload(tx, mcptx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
-    }
-
-    if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
-    }
-
-    // need to check
-
-    // // TxCore Fields
-    // CNetAddr ipAddress;
-    // boost::uuids::uuid mcpId;
-    // uint16_t version;    
-    // std::vector<unsigned char> nuanceId; // URI
-    // uint256 toWallet; // address/hash
+    // postAction check
 
     return true;
 }
@@ -183,18 +172,29 @@ bool CheckMcpAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
     }
 
-    if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!mcptx.ipAddress.IsIPv4() || !mcptx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    }
+
+    // version check
+    if (mcptx.version == 0 || mcptx.version > CMcpAuthTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // need to check
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    }
 
-    // // TxCore Fields
-    // CNetAddr ipAddress;
-    // boost::uuids::uuid mcpId;
-    // uint16_t version;    
-    // std::vector<unsigned char> nuanceId; // URI
-    // uint256 authorizeWallet; // address/hash
+    // authorize wallet check
 
     return true;
 }
@@ -205,23 +205,34 @@ bool CheckMcpRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CV
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-type");
     }
 
-    CMcpAuthTx mcptx;
+    CMcpRevAuthTx mcptx;
     if (!GetTxPayload(tx, mcptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
     }
 
-    if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!mcptx.ipAddress.IsIPv4() || !mcptx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    }
+
+    // version check
+    if (mcptx.version == 0 || mcptx.version > CMcpRevAuthTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // need to check
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    }
 
-    // // TxCore Fields
-    // CNetAddr ipAddress;
-    // boost::uuids::uuid mcpId;
-    // uint16_t version;    
-    // std::vector<unsigned char> nuanceId; // URI
-    // uint256 revokeWallet; // address/hash
+    // revoke wallet check
 
     return true;
 }
@@ -233,24 +244,74 @@ bool CheckMcpCheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-type");
     }
 
-    CMcpAuthTx mcptx;
+    CMcpCheckTx mcptx;
     if (!GetTxPayload(tx, mcptx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
     }
 
-    if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!mcptx.ipAddress.IsIPv4() || !mcptx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    }
+
+    // version check
+    if (mcptx.version == 0 || mcptx.version > CMcpCheckTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // need to check
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    }
 
-    // // TxCore Fields
-    // CNetAddr ipAddress;
-    // boost::uuids::uuid mcpId;
-    // uint16_t version;    
-    // std::vector<unsigned char> nuanceId; // txid - hash
-    // uint256 hash; // hash of concept
-    // bool nuanceSatisfied; // bool
+    // hash check
+
+    // nuance satisfied check
+
+    return true;
+}
+
+bool CheckMcpXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    if (tx.nType != TRANSACTION_MCP_TRANSFER) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-type");
+    }
+
+    CMcpXferTx mcptx;
+    if (!GetTxPayload(tx, mcptx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-payload");
+    }
+
+    // ipAddress check
+    if (!mcptx.ipAddress.IsIPv4() || !mcptx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    }
+
+    // version check
+    if (mcptx.version == 0 || mcptx.version > CMcpXferTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
+    }
+
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    }
+
+    // to wallet check
 
     return true;
 }
@@ -258,38 +319,38 @@ bool CheckMcpCheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
 std::string CMcpRegTx::ToString() const
 {
-    return strprintf("CMcpRegTx(ipAddress=%d, mcpId=%s, version=%d, name=%s)",
-        ipAddress, mcpId.ToString(), version, name);
+    return strprintf("CMcpRegTx(ipAddress=%s, mcpId=%s, version=%s, name=%s)",
+        ipAddress, mcpId, version, name);
 }
 
 std::string CMcpUnregTx::ToString() const
 {
-    return strprintf("CMcpUnregTx(ipAddress=%d, mcpId=%s, version=%d, action=%s, postAction=%s)",
-        ipAddress, mcpId.ToString(), version, action, postAction);
+    return strprintf("CMcpUnregTx(ipAddress=%s, mcpId=%s, version=%s, action=%s, postAction=%s)",
+        ipAddress, mcpId, version, action, postAction);
 }
 
 std::string CMcpXferTx::ToString() const
 {
-    return strprintf("CMcpXferTx(ipAddress=%d, mcpId=%s, version=%d, nuanceId=%s, toWallet=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, toWallet);
+    return strprintf("CMcpXferTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, toWallet=%s)",
+        ipAddress, mcpId, version, nuanceId, toWallet);
 }
 
 std::string CMcpAuthTx::ToString() const
 {
-    return strprintf("CMcpAuthTx(ipAddress=%d, mcpId=%s, version=%d, nuanceId=%s, authorizeWallet=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, authorizeWallet);
+    return strprintf("CMcpAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, authorizeWallet=%s)",
+        ipAddress, mcpId, version, nuanceId, authorizeWallet);
 }
 
 std::string CMcpRevAuthTx::ToString() const
 {
-    return strprintf("CMcpRevAuthTx(ipAddress=%d, mcpId=%s, version=%d, nuanceId=%s, revokeWallet=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, revokeWallet);
+    return strprintf("CMcpRevAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, revokeWallet=%s)",
+        ipAddress, mcpId, version, nuanceId, revokeWallet);
 }
 
 std::string CMcpCheckTx::ToString() const
 {
-    return strprintf("CMcpCheckTx(ipAddress=%d, mcpId=%s, version=%d, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, hash, nuanceSatisfied);
+    return strprintf("CMcpCheckTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
+        ipAddress, mcpId, version, nuanceId, hash, nuanceSatisfied);
 }
 
 void CMcpRegTx::ToJson(UniValue& obj) const
@@ -321,7 +382,7 @@ void CMcpXferTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("toWallet", toWallet));
+    obj.push_back(Pair("toWallet", toWallet.ToString()));
 }
 
 void CMcpAuthTx::ToJson(UniValue& obj) const
@@ -332,7 +393,7 @@ void CMcpAuthTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("authorizeWallet", authorizeWallet));
+    obj.push_back(Pair("authorizeWallet", authorizeWallet.ToString()));
 }
 
 void CMcpRevAuthTx::ToJson(UniValue& obj) const
@@ -343,7 +404,7 @@ void CMcpRevAuthTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("revokeWallet", revokeWallet));
+    obj.push_back(Pair("revokeWallet", revokeWallet.ToString()));
 }
 
 void CMcpCheckTx::ToJson(UniValue& obj) const
@@ -354,7 +415,7 @@ void CMcpCheckTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("hash", hash));
+    obj.push_back(Pair("hash", hash.ToString()));
     obj.push_back(Pair("nuanceSatisfied", nuanceSatisfied));
 
 }

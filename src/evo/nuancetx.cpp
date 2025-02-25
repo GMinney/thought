@@ -17,7 +17,11 @@
 #include "univalue.h"
 #include "validation.h"
 
+#include <regex>
+
 #include <boost/url/urls.hpp>
+#include <boost/url/parse.hpp>
+using namespace boost::urls;
 
 template <typename NuanceTx>
 static bool CheckService(const uint256& nuanceTxHash, const NuanceTx& nuanceTx, CValidationState& state)
@@ -92,13 +96,40 @@ bool CheckNuRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValida
     }
 
     CNuRegTx ntx;
+    // payload check
     if (!GetTxPayload(tx, ntx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
     }
 
+    // ipAddress check
+    if (!ntx.ipAddress.IsIPv4() || !ntx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ip-invalid");
+    }
+
+    // mcpid uri check
+    boost::system::result<url_view> mcpUri = parse_uri( ntx.mcpId );
+    if (ntx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-mcpId-invalid");
+    }
+
+    // version check
     if (ntx.version == 0 || ntx.version > CNuRegTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
     }
+
+    // name check
+    if (ntx.name.size() == 0) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-name");
+    }
+
+    // conceptId uri check
+    boost::system::result<url_view> conceptUri = parse_uri( ntx.conceptId );
+    if (ntx.conceptId.length() == 0 || conceptUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-conceptId-invalid");
+    }
+
+    // hash check - would require the retreval of the concept, then validating it
+
 
     return true;
 }
@@ -114,45 +145,31 @@ bool CheckNuUnregTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
     }
 
-    if (ntx.version == 0 || ntx.version > CNuRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!ntx.ipAddress.IsIPv4() || !ntx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( ntx.mcpId );
+    if (ntx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-mcpId-invalid");
+    }
+
+    // version check
+    if (ntx.version == 0 || ntx.version > CNuUnregTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
     }
 
-    return true;
-}
-
-bool CheckNuXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
-{
-    if (tx.nType != TRANSACTION_NUANCE_TRANSFER) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-type");
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( ntx.nuanceId );
+    if (ntx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-nuanceId-invalid");
     }
 
-    CNuXferTx ntx;
-    if (!GetTxPayload(tx, ntx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
-    }
+    // action check
 
-    if (ntx.version == 0 || ntx.version > CNuRegTx::CURRENT_VERSION) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
-    }
-
-    return true;
-}
-
-bool CheckNuRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
-{
-    if (tx.nType != TRANSACTION_NUANCE_REVOKE) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-type");
-    }
-
-    CNuRevAuthTx ntx;
-    if (!GetTxPayload(tx, ntx)) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
-    }
-
-    if (ntx.version == 0 || ntx.version > CNuRegTx::CURRENT_VERSION) {
-        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
-    }
+    // postAction check
 
     return true;
 }
@@ -168,9 +185,67 @@ bool CheckNuAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
     }
 
-    if (ntx.version == 0 || ntx.version > CNuRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!ntx.ipAddress.IsIPv4() || !ntx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( ntx.mcpId );
+    if (ntx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-mcpId-invalid");
+    }
+
+    // version check
+    if (ntx.version == 0 || ntx.version > CNuAuthTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
     }
+
+    // uri check for nuanceId
+    boost::system::result<url_view> conceptUri = parse_uri( ntx.nuanceId );
+    if (ntx.nuanceId.length() == 0 || conceptUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-conceptId-invalid");
+    }
+
+    // authorizeWallet check 
+
+    return true;
+}
+
+bool CheckNuRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    if (tx.nType != TRANSACTION_NUANCE_REVOKE) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-type");
+    }
+
+    CNuRevAuthTx ntx;
+    if (!GetTxPayload(tx, ntx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
+    }
+
+    // ipAddress check
+    if (!ntx.ipAddress.IsIPv4() || !ntx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( ntx.mcpId );
+    if (ntx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-mcpId-invalid");
+    }
+
+    // version check
+    if (ntx.version == 0 || ntx.version > CNuRevAuthTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
+    }
+
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( ntx.nuanceId );
+    if (ntx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-nuanceId-invalid");
+    }
+
+    // revokeWallet check
 
     return true;
 }
@@ -186,48 +261,108 @@ bool CheckNuCheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
     }
 
-    if (ntx.version == 0 || ntx.version > CNuRegTx::CURRENT_VERSION) {
+    // ipAddress check
+    if (!ntx.ipAddress.IsIPv4() || !ntx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( ntx.mcpId );
+    if (ntx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-mcpId-invalid");
+    }
+
+    // version check
+    if (ntx.version == 0 || ntx.version > CNuCheckTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
     }
+
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( ntx.nuanceId );
+    if (ntx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-nuanceId-invalid");
+    }
+
+    // hash check - hash of nuance data payload at this time
+
+    // nuanceSatisfied check
 
     return true;
 }
 
+bool CheckNuXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+{
+    if (tx.nType != TRANSACTION_NUANCE_TRANSFER) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-type");
+    }
+
+    CNuXferTx ntx;
+    if (!GetTxPayload(tx, ntx)) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-payload");
+    }
+
+    // ipAddress check
+    if (!ntx.ipAddress.IsIPv4() || !ntx.ipAddress.IsIPv6()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ip-invalid");
+    }
+
+    // uri check for mcpid
+    boost::system::result<url_view> mcpUri = parse_uri( ntx.mcpId );
+    if (ntx.mcpId.length() == 0 || mcpUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-mcpId-invalid");
+    }
+
+    // version check
+    if (ntx.version == 0 || ntx.version > CNuXferTx::CURRENT_VERSION) {
+        return state.DoS(100, false, REJECT_INVALID, "bad-nuancetx-version");
+    }
+
+    // uri check for nuanceId
+    boost::system::result<url_view> nuanceUri = parse_uri( ntx.nuanceId );
+    if (ntx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-nuanceId-invalid");
+    }
+
+    // toWallet check
+
+
+    return true;
+}
 
 std::string CNuRegTx::ToString() const
 {
-    return strprintf("CNuRegTx(ipAddress=%s, mcpId=%s, version=%d, name=%s, conceptId=%s, hash=%s)",
-        ipAddress, mcpId.ToString(), version, name, conceptId, hash);
+    return strprintf("CNuRegTx(ipAddress=%s, mcpId=%s, version=%s, name=%s, conceptId=%s, hash=%s)",
+        ipAddress, mcpId, version, name, conceptId, hash);
 }
 
 std::string CNuUnregTx::ToString() const
 {
-    return strprintf("CNuUnregTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, action=%s, postAction=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, action, postAction);
+    return strprintf("CNuUnregTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, action=%s, postAction=%s)",
+        ipAddress, mcpId, version, nuanceId, action, postAction);
 }
 
 std::string CNuXferTx::ToString() const
 {
-    return strprintf("CNuXferTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, toWallet=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, toWallet);
+    return strprintf("CNuXferTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, toWallet=%s)",
+        ipAddress, mcpId, version, nuanceId, toWallet);
 }
 
 std::string CNuCheckTx::ToString() const
 {
-    return strprintf("CNuCheckTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, hash, nuanceSatisfied);
+    return strprintf("CNuCheckTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
+        ipAddress, mcpId, version, nuanceId, hash, nuanceSatisfied);
 }
 
 std::string CNuAuthTx::ToString() const
 {
-    return strprintf("CNuAuthTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, authorizeWallet=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, authorizeWallet);
+    return strprintf("CNuAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, authorizeWallet=%s)",
+        ipAddress, mcpId, version, nuanceId, authorizeWallet);
 }
 
 std::string CNuRevAuthTx::ToString() const
 {
-    return strprintf("CNuRevAuthTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, revokeWallet=%s)",
-        ipAddress, mcpId.ToString(), version, nuanceId, revokeWallet);
+    return strprintf("CNuRevAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, revokeWallet=%s)",
+        ipAddress, mcpId, version, nuanceId, revokeWallet);
 }
 
 void CNuRegTx::ToJson(UniValue& obj) const
@@ -239,7 +374,7 @@ void CNuRegTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("name", name));
     obj.push_back(Pair("conceptId", conceptId));
-    obj.push_back(Pair("hash", hash));
+    obj.push_back(Pair("hash", hash.ToString()));
 }
 
 void CNuUnregTx::ToJson(UniValue& obj) const
@@ -262,7 +397,7 @@ void CNuXferTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("toWallet", toWallet));
+    obj.push_back(Pair("toWallet", toWallet.ToString()));
 }
 
 void CNuCheckTx::ToJson(UniValue& obj) const
@@ -273,7 +408,7 @@ void CNuCheckTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("hash", hash));
+    obj.push_back(Pair("hash", hash.ToString()));
     obj.push_back(Pair("nuanceSatisfied", nuanceSatisfied));
 }
 
@@ -285,7 +420,7 @@ void CNuAuthTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("authorizeWallet", authorizeWallet));
+    obj.push_back(Pair("authorizeWallet", authorizeWallet.ToString()));
 }
 
 void CNuRevAuthTx::ToJson(UniValue& obj) const
@@ -296,5 +431,5 @@ void CNuRevAuthTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("mcpId", mcpId));
     obj.push_back(Pair("version", version));
     obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("revokeWallet", revokeWallet));
+    obj.push_back(Pair("revokeWallet", revokeWallet.ToString()));
 }
