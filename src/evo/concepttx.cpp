@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "deterministicmns.h"
-#include "specialtx.h"
 #include "concepttx.h"
+#include "specialtx.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -27,23 +27,23 @@ template <typename ConceptTx>
 static bool CheckService(const uint256& conceptTxHash, const ConceptTx& conceptTx, CValidationState& state)
 {
     if (!conceptTx.ipAddress.IsValid()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-conceptTx-ipAddress");
     }
-    if (Params().RequireRoutableExternalIP() && !conceptTx.ipAddress.IsRoutable()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr");
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !conceptTx.ipAddress.IsRoutable()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-conceptTx-ipAddress");
     }
 
-    static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
+    int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if (conceptTx.ipAddress.GetPort() != mainnetDefaultPort) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr-port");
+            return state.DoS(10, false, REJECT_INVALID, "bad-conceptTx-ipAddress-port");
         }
     } else if (conceptTx.ipAddress.GetPort() == mainnetDefaultPort) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr-port");
+        return state.DoS(10, false, REJECT_INVALID, "bad-conceptTx-ipAddress-port");
     }
 
     if (!conceptTx.ipAddress.IsIPv4() && !conceptTx.ipAddress.IsIPv6()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ipaddr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-conceptTx-ipAddress");
     }
 
     return true;
@@ -113,7 +113,7 @@ bool CheckConRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-mcpId-invalid");
     }
 
-    // version check
+    // transaction version check
     if (ctx.version == 0 || ctx.version > CConRegTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-version");
     }
@@ -203,8 +203,8 @@ bool CheckConUnregTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-payload");
     }
 
-    // version string check
-    std::string version_string(ctx.version.begin(), ctx.version.end());
+    // conceptVersion string check
+    std::string version_string(ctx.conceptVersion.begin(), ctx.conceptVersion.end());
     std::regex pattern(R"((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))");
     if (!std::regex_match(version_string, pattern)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-version-invalid");
@@ -235,8 +235,8 @@ bool CheckConXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-payload");
     }
 
-    // version string check
-    std::string version_string(ctx.version.begin(), ctx.version.end());
+    // conceptVersion string check
+    std::string version_string(ctx.conceptVersion.begin(), ctx.conceptVersion.end());
     std::regex pattern(R"((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))");
     if (!std::regex_match(version_string, pattern)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-version-invalid");
@@ -273,8 +273,8 @@ bool CheckConAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
     // authorize wallet check
 
 
-    // version string check
-    std::string version_string(ctx.version.begin(), ctx.version.end());
+    // conceptVersion string check
+    std::string version_string(ctx.conceptVersion.begin(), ctx.conceptVersion.end());
     std::regex pattern(R"((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))");
     if (!std::regex_match(version_string, pattern)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-version-invalid");
@@ -303,8 +303,8 @@ bool CheckConRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CV
     // reevoke wallet check
 
 
-    // version string check
-    std::string version_string(ctx.version.begin(), ctx.version.end());
+    // conceptVersion string check
+    std::string version_string(ctx.conceptVersion.begin(), ctx.conceptVersion.end());
     std::regex pattern(R"((0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*))");
     if (!std::regex_match(version_string, pattern)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-version-invalid");
@@ -315,97 +315,122 @@ bool CheckConRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CV
 
 std::string CConRegTx::ToString() const
 {
-    return strprintf("CConRegTx(ipAddress=%s, mcpId=%s, version=%s, name=%s, conceptId=%s, conceptHash=%s, conceptParentId=%s, conceptVersion=%s, codeLocation=%s)",
-        ipAddress, mcpId, version, name, conceptId, conceptHash, conceptParentId, conceptVersion, codeLocation);
-}
-
-std::string CConAuthTx::ToString() const
-{
-    return strprintf("CConAuthTx(conceptId=%s, authorizeWallet=%s, version=%s)",
-        conceptId, authorizeWallet.ToString(), version);
-}
-
-std::string CConUpTx::ToString() const
-{
-    return strprintf("CConUpTx(conceptId=%s, conceptHash=%s, conceptVersion=%s, codeLocation=%s)",
-        conceptId, conceptHash.ToString(), conceptVersion, codeLocation);
-}
-
-std::string CConRevAuthTx::ToString() const
-{
-    return strprintf("CConRevAuthTx(conceptId=%s, revokeWallet=%s, version=%s)",
-        conceptId, revokeWallet.ToString(), version);
+    return strprintf("CConRegTx(ipAddress=%s, mcpId=%s, version=%d, name=%s, conceptId=%s, conceptHash=%s, conceptParentId=%s, conceptVersion=%s, codeLocation=%s)",
+        ipAddress.ToString(),
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(name.begin(), name.end()), 
+        std::string(conceptId.begin(), conceptId.end()), 
+        conceptHash.ToString(), 
+        std::string(conceptParentId.begin(), conceptParentId.end()), 
+        std::string(conceptVersion.begin(), conceptVersion.end()), 
+        std::string(codeLocation.begin(), codeLocation.end())
+    );
 }
 
 std::string CConUnregTx::ToString() const
 {
-    return strprintf("CConUnregTx(conceptId=%s, version=%s, action=%s)",
-        conceptId, version, action);
+    return strprintf("CConUnregTx(conceptId=%s, conceptVersion=%s, action=%s)",
+        std::string(conceptId.begin(), conceptId.end()), 
+        std::string(conceptVersion.begin(), conceptVersion.end()), 
+        action
+    );
+}
+
+std::string CConAuthTx::ToString() const
+{
+    return strprintf("CConAuthTx(conceptId=%s, conceptVersion=%s, authorizeWallet=%s)",
+        std::string(conceptId.begin(), conceptId.end()), 
+        std::string(conceptVersion.begin(), conceptVersion.end()),
+        authorizeWallet.ToString()
+    );
+}
+
+std::string CConRevAuthTx::ToString() const
+{
+    return strprintf("CConRevAuthTx(conceptId=%s, conceptVersion=%s, revokeWallet=%s)",
+        std::string(conceptId.begin(), conceptId.end()), 
+        std::string(conceptVersion.begin(), conceptVersion.end()),
+        revokeWallet.ToString()
+    );
+}
+
+std::string CConUpTx::ToString() const
+{
+    return strprintf("CConUpTx(conceptId=%s, conceptVersion=%s, conceptHash=%s, codeLocation=%s)",
+        std::string(conceptId.begin(), conceptId.end()), 
+        conceptHash.ToString(), 
+        std::string(conceptVersion.begin(), conceptVersion.end()), 
+        std::string(codeLocation.begin(), codeLocation.end())
+    );
 }
 
 std::string CConXferTx::ToString() const
 {
-    return strprintf("CConXferTx(conceptId=%s, toWallet=%s, version=%s)",
-        conceptId, toWallet.ToString(), version);
+    return strprintf("CConXferTx(conceptId=%s, conceptVersion=%s, toWallet=%s)",
+        std::string(conceptId.begin(), conceptId.end()), 
+        std::string(conceptVersion.begin(), conceptVersion.end()),
+        toWallet.ToString()
+    );
 }
 
 void CConRegTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAdress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("name", name));
-    obj.push_back(Pair("conceptId", conceptId));
+    obj.push_back(Pair("name", std::string(name.begin(), name.end())));
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
     obj.push_back(Pair("conceptHash", conceptHash.ToString()));
     obj.push_back(Pair("conceptParentId", conceptParentId));
-    obj.push_back(Pair("conceptVersion", conceptVersion));
+    obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
     obj.push_back(Pair("codeLocation", codeLocation));
-}
-
-void CConAuthTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("conceptId", conceptId));
-    obj.push_back(Pair("authorizeWallet", authorizeWallet.ToString()));
-    obj.push_back(Pair("version", version));
-}
-
-void CConUpTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("conceptId", conceptId));
-    obj.push_back(Pair("conceptHash", conceptHash.ToString()));
-    obj.push_back(Pair("conceptVersion", conceptVersion));
-    obj.push_back(Pair("codeLocation", codeLocation));
-}
-
-void CConRevAuthTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("conceptId", conceptId));
-    obj.push_back(Pair("revokeWallet", revokeWallet.ToString()));
-    obj.push_back(Pair("version", version));
 }
 
 void CConUnregTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("version", version));
-    obj.push_back(Pair("conceptId", conceptId));
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
+    obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
     obj.push_back(Pair("action", action));
+}
+
+void CConAuthTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
+    obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
+    obj.push_back(Pair("authorizeWallet", authorizeWallet.ToString()));
+}
+
+void CConRevAuthTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
+    obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
+    obj.push_back(Pair("revokeWallet", revokeWallet.ToString()));
+}
+
+void CConUpTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
+    obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
+    obj.push_back(Pair("conceptHash", conceptHash.ToString()));
+    obj.push_back(Pair("codeLocation", codeLocation));
 }
 
 void CConXferTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("version", version));
-    obj.push_back(Pair("conceptId", conceptId));
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
+    obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
     obj.push_back(Pair("toWallet", toWallet.ToString()));
 }

@@ -30,7 +30,7 @@ public:
 
 public:
     // Nuance Registration Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId; 
     uint16_t version;    
     std::vector<unsigned char> name; 
@@ -76,7 +76,7 @@ public:
 
 public:
     // Nuance Unregister Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     boost::core::string_view nuanceId; 
@@ -113,7 +113,7 @@ public:
 
 public:
     // Nuance Authorization Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;    
     boost::core::string_view nuanceId; 
@@ -148,7 +148,7 @@ public:
 
 public:
     // Nuance revoke authorization Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;    
     boost::core::string_view nuanceId; 
@@ -183,7 +183,7 @@ public:
 
 public:
     // Nuance Checkpoint Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;    
     boost::core::string_view nuanceId; 
@@ -220,7 +220,7 @@ public:
 
 public:
     // Nuance transfer Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;    
     boost::core::string_view nuanceId; 

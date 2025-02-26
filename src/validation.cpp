@@ -45,6 +45,9 @@
 
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
+#include "evo/concepttx.h"
+#include "evo/nuancetx.h"
+#include "evo/mcptx.h"
 #include "evo/deterministicmns.h"
 #include "evo/cbtx.h"
 

@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "deterministicmns.h"
-#include "specialtx.h"
 #include "nuancetx.h"
+#include "specialtx.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -27,23 +27,23 @@ template <typename NuanceTx>
 static bool CheckService(const uint256& nuanceTxHash, const NuanceTx& nuanceTx, CValidationState& state)
 {
     if (!nuanceTx.ipAddress.IsValid()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuanceTx-ipAddress");
     }
-    if (Params().RequireRoutableExternalIP() && !nuanceTx.ipAddress.IsRoutable()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr");
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !nuanceTx.ipAddress.IsRoutable()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuanceTx-ipAddress");
     }
 
-    static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
+    int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if (nuanceTx.ipAddress.GetPort() != mainnetDefaultPort) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr-port");
+            return state.DoS(10, false, REJECT_INVALID, "bad-nuanceTx-ipAddress-port");
         }
     } else if (nuanceTx.ipAddress.GetPort() == mainnetDefaultPort) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr-port");
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuanceTx-ipAddress-port");
     }
 
     if (!nuanceTx.ipAddress.IsIPv4() && !nuanceTx.ipAddress.IsIPv6()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-nuancetx-ipaddr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-nuanceTx-ipAddress");
     }
 
     return true;
@@ -331,49 +331,82 @@ bool CheckNuXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
 std::string CNuRegTx::ToString() const
 {
-    return strprintf("CNuRegTx(ipAddress=%s, mcpId=%s, version=%s, name=%s, conceptId=%s, hash=%s)",
-        ipAddress, mcpId, version, name, conceptId, hash);
+    return strprintf("CNuRegTx(ipAddress=%s, mcpId=%s, version=%d, name=%s, conceptId=%s, hash=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()),
+        version, 
+        std::string(name.begin(), name.end()), 
+        std::string(conceptId.begin(), conceptId.end()), 
+        hash.ToString()
+    );
 }
 
 std::string CNuUnregTx::ToString() const
 {
-    return strprintf("CNuUnregTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, action=%s, postAction=%s)",
-        ipAddress, mcpId, version, nuanceId, action, postAction);
-}
-
-std::string CNuXferTx::ToString() const
-{
-    return strprintf("CNuXferTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, toWallet=%s)",
-        ipAddress, mcpId, version, nuanceId, toWallet);
-}
-
-std::string CNuCheckTx::ToString() const
-{
-    return strprintf("CNuCheckTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
-        ipAddress, mcpId, version, nuanceId, hash, nuanceSatisfied);
+    return strprintf("CNuUnregTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, action=%s, postAction=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        action, 
+        postAction
+    );
 }
 
 std::string CNuAuthTx::ToString() const
 {
-    return strprintf("CNuAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, authorizeWallet=%s)",
-        ipAddress, mcpId, version, nuanceId, authorizeWallet);
+    return strprintf("CNuAuthTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, authorizeWallet=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        authorizeWallet.ToString()
+    );
 }
 
 std::string CNuRevAuthTx::ToString() const
 {
-    return strprintf("CNuRevAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, revokeWallet=%s)",
-        ipAddress, mcpId, version, nuanceId, revokeWallet);
+    return strprintf("CNuRevAuthTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, revokeWallet=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        revokeWallet.ToString()
+    );
+}
+
+std::string CNuCheckTx::ToString() const
+{
+    return strprintf("CNuCheckTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        hash.ToString(), 
+        nuanceSatisfied
+    );
+}
+
+std::string CNuXferTx::ToString() const
+{
+    return strprintf("CNuXferTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, toWallet=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        toWallet.ToString()
+    );
 }
 
 void CNuRegTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("name", name));
-    obj.push_back(Pair("conceptId", conceptId));
+    obj.push_back(Pair("name", std::string(name.begin(), name.end())));
+    obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
     obj.push_back(Pair("hash", hash.ToString()));
 }
 
@@ -381,45 +414,22 @@ void CNuUnregTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("mcpId", mcpId));
-    obj.push_back(Pair("nuanceId", nuanceId));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
     obj.push_back(Pair("action", action));
     obj.push_back(Pair("postAction", postAction));
-}
-
-void CNuXferTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
-    obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("toWallet", toWallet.ToString()));
-}
-
-void CNuCheckTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
-    obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("hash", hash.ToString()));
-    obj.push_back(Pair("nuanceSatisfied", nuanceSatisfied));
 }
 
 void CNuAuthTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
     obj.push_back(Pair("authorizeWallet", authorizeWallet.ToString()));
 }
 
@@ -427,9 +437,35 @@ void CNuRevAuthTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
     obj.push_back(Pair("revokeWallet", revokeWallet.ToString()));
 }
+
+void CNuCheckTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
+    obj.push_back(Pair("version", version));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
+    obj.push_back(Pair("hash", hash.ToString()));
+    obj.push_back(Pair("nuanceSatisfied", nuanceSatisfied));
+}
+
+void CNuXferTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
+    obj.push_back(Pair("version", version));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
+    obj.push_back(Pair("toWallet", toWallet.ToString()));
+}
+
+
+

@@ -29,7 +29,7 @@ public:
 
 public:
     // Concept Registration Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     std::vector<unsigned char> name;
@@ -77,7 +77,7 @@ public:
 public:
     // Concept un-register Fields
     boost::core::string_view conceptId; 
-    std::vector<unsigned char> version; 
+    std::vector<unsigned char> conceptVersion; 
     ConUnregAction action; 
 
 public:
@@ -87,7 +87,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(conceptId);
-        READWRITE(version);
+        READWRITE(conceptVersion);
         READWRITE(action);
     }
 
@@ -108,7 +108,7 @@ public:
 public:
     // Concept user authorization Fields
     boost::core::string_view conceptId;
-    std::vector<unsigned char> version;
+    std::vector<unsigned char> conceptVersion;
     uint256 authorizeWallet;
 
 
@@ -119,8 +119,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(conceptId);
+        READWRITE(conceptVersion);
         READWRITE(authorizeWallet);
-        READWRITE(version);
     }
 
 public:
@@ -140,7 +140,7 @@ public:
 public:
     // Concept revoke authorization Fields
     boost::core::string_view conceptId;
-    std::vector<unsigned char> version;
+    std::vector<unsigned char> conceptVersion;
     uint256 revokeWallet;
 
 
@@ -151,8 +151,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(conceptId);
+        READWRITE(conceptVersion);
         READWRITE(revokeWallet);
-        READWRITE(version);
     }
 
 public:
@@ -183,8 +183,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(conceptId);
-        READWRITE(conceptHash);
         READWRITE(conceptVersion);
+        READWRITE(conceptHash);
         READWRITE(codeLocation);
     }
 
@@ -205,7 +205,7 @@ public:
 public:
     // Concept transfer Fields
     boost::core::string_view conceptId;
-    std::vector<unsigned char> version;
+    std::vector<unsigned char> conceptVersion;
     uint256 toWallet;
 
 public:
@@ -215,8 +215,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(conceptId);
+        READWRITE(conceptVersion);
         READWRITE(toWallet);
-        READWRITE(version);
     }
 
 public:

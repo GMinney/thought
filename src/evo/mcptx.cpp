@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "deterministicmns.h"
-#include "specialtx.h"
 #include "mcptx.h"
+#include "specialtx.h"
 
 #include "base58.h"
 #include "chainparams.h"
@@ -28,23 +28,23 @@ template <typename McpTx>
 static bool CheckService(const uint256& mcpTxHash, const McpTx& mcpTx, CValidationState& state)
 {
     if (!mcpTx.ipAddress.IsValid()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-addr");
     }
-    if (Params().RequireRoutableExternalIP() && !mcpTx.ipAddress.IsRoutable()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr");
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST && !mcpTx.ipAddress.IsRoutable()) {
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-addr");
     }
 
-    static int mainnetDefaultPort = CreateChainParams(CBaseChainParams::MAIN)->GetDefaultPort();
+    int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
     if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if (mcpTx.ipAddress.GetPort() != mainnetDefaultPort) {
-            return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr-port");
+            return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-addr-port");
         }
     } else if (mcpTx.ipAddress.GetPort() == mainnetDefaultPort) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr-port");
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-addr-port");
     }
 
     if (!mcpTx.ipAddress.IsIPv4() && !mcpTx.ipAddress.IsIPv6()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ipaddr");
+        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-addr");
     }
 
     return true;
@@ -319,80 +319,100 @@ bool CheckMcpXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
 
 std::string CMcpRegTx::ToString() const
 {
-    return strprintf("CMcpRegTx(ipAddress=%s, mcpId=%s, version=%s, name=%s)",
-        ipAddress, mcpId, version, name);
+    return strprintf("CMcpRegTx(ipAddress=%s, mcpId=%s, version=%d, name=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(name.begin(), name.end())
+    );
 }
 
 std::string CMcpUnregTx::ToString() const
 {
-    return strprintf("CMcpUnregTx(ipAddress=%s, mcpId=%s, version=%s, action=%s, postAction=%s)",
-        ipAddress, mcpId, version, action, postAction);
+    return strprintf("CMcpUnregTx(ipAddress=%s, mcpId=%s, version=%d, action=%s, postAction=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        action, 
+        postAction
+    );
 }
 
-std::string CMcpXferTx::ToString() const
-{
-    return strprintf("CMcpXferTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, toWallet=%s)",
-        ipAddress, mcpId, version, nuanceId, toWallet);
-}
 
 std::string CMcpAuthTx::ToString() const
 {
-    return strprintf("CMcpAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, authorizeWallet=%s)",
-        ipAddress, mcpId, version, nuanceId, authorizeWallet);
+    return strprintf("CMcpAuthTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, authorizeWallet=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        authorizeWallet.ToString()
+    );
 }
 
 std::string CMcpRevAuthTx::ToString() const
 {
-    return strprintf("CMcpRevAuthTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, revokeWallet=%s)",
-        ipAddress, mcpId, version, nuanceId, revokeWallet);
+    return strprintf("CMcpRevAuthTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, revokeWallet=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        revokeWallet.ToString());
 }
 
 std::string CMcpCheckTx::ToString() const
 {
-    return strprintf("CMcpCheckTx(ipAddress=%s, mcpId=%s, version=%s, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
-        ipAddress, mcpId, version, nuanceId, hash, nuanceSatisfied);
+    return strprintf("CMcpCheckTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, hash=%s, nuanceSatisfied=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        hash.ToString(), 
+        nuanceSatisfied
+    );
 }
+
+std::string CMcpXferTx::ToString() const
+{
+    return strprintf("CMcpXferTx(ipAddress=%s, mcpId=%s, version=%d, nuanceId=%s, toWallet=%s)",
+        ipAddress.ToString(), 
+        std::string(mcpId.begin(), mcpId.end()), 
+        version, 
+        std::string(nuanceId.begin(), nuanceId.end()), 
+        toWallet.ToString()
+    );
+}
+
 
 void CMcpRegTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("name", name));
+    obj.push_back(Pair("name", std::string(name.begin(), name.end())));
 }
 
 void CMcpUnregTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("action", action));
     obj.push_back(Pair("postAction", postAction));
-}
-
-void CMcpXferTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
-    obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
-    obj.push_back(Pair("toWallet", toWallet.ToString()));
 }
 
 void CMcpAuthTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
     obj.push_back(Pair("authorizeWallet", authorizeWallet.ToString()));
 }
 
@@ -400,10 +420,10 @@ void CMcpRevAuthTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
     obj.push_back(Pair("revokeWallet", revokeWallet.ToString()));
 }
 
@@ -411,11 +431,23 @@ void CMcpCheckTx::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
-    obj.push_back(Pair("ipAddress", ipAddress.ToString()));
-    obj.push_back(Pair("mcpId", mcpId));
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
     obj.push_back(Pair("version", version));
-    obj.push_back(Pair("nuanceId", nuanceId));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
     obj.push_back(Pair("hash", hash.ToString()));
     obj.push_back(Pair("nuanceSatisfied", nuanceSatisfied));
 
 }
+
+void CMcpXferTx::ToJson(UniValue& obj) const
+{
+    obj.clear();
+    obj.setObject();
+    obj.push_back(Pair("ipAddress", ipAddress.ToString(false)));
+    obj.push_back(Pair("mcpId", std::string(mcpId.begin(), mcpId.end())));
+    obj.push_back(Pair("version", version));
+    obj.push_back(Pair("nuanceId", std::string(nuanceId.begin(), nuanceId.end())));
+    obj.push_back(Pair("toWallet", toWallet.ToString()));
+}
+

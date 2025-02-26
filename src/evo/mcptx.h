@@ -29,7 +29,7 @@ public:
 
 public:
     // MCP Registration Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     std::vector<unsigned char> name;
@@ -71,7 +71,7 @@ public:
 
 public:
     // MCP Unregister Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     McpUnregAction action;
@@ -106,7 +106,7 @@ public:
 
 public:
     // MCP Authorization Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId; // URI
     uint16_t version;    
     boost::core::string_view nuanceId; // URI
@@ -141,7 +141,7 @@ public:
 
 public:
     // MCP Revoke Auth Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     boost::core::string_view nuanceId;
@@ -176,7 +176,7 @@ public:
 
 public:
     // MCP Checkpoint Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     boost::core::string_view nuanceId;
@@ -213,7 +213,7 @@ public:
 
 public:
     // MCP Transfer Fields
-    CNetAddr ipAddress;
+    CService ipAddress;
     boost::core::string_view mcpId;
     uint16_t version;
     boost::core::string_view nuanceId;
