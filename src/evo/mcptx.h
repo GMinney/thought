@@ -30,7 +30,7 @@ public:
 public:
     // MCP Registration Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
     std::vector<unsigned char> name;
 
@@ -59,11 +59,11 @@ class CMcpUnregTx
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-    enum McpUnregAction {
+    enum  {
         KILL = 0
     };
-
-    enum McpUnregPostAction {
+     
+    enum {
         DELETE = 0,
         RETURN_TO_ORIGIN = 1,
         ARCHIVE = 2
@@ -72,10 +72,10 @@ public:
 public:
     // MCP Unregister Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
-    McpUnregAction action;
-    McpUnregPostAction postAction;
+    uint16_t action{KILL};
+    uint16_t postAction{DELETE};
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -107,9 +107,9 @@ public:
 public:
     // MCP Authorization Fields
     CService ipAddress;
-    boost::core::string_view mcpId; // URI
+    std::vector<unsigned char> mcpId; // URI
     uint16_t version;    
-    boost::core::string_view nuanceId; // URI
+    std::vector<unsigned char> nuanceId; // URI
     uint256 authorizeWallet; // address/hash
 
 public:
@@ -142,9 +142,9 @@ public:
 public:
     // MCP Revoke Auth Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
-    boost::core::string_view nuanceId;
+    std::vector<unsigned char> nuanceId;
     uint256 revokeWallet; 
 
 public:
@@ -177,9 +177,9 @@ public:
 public:
     // MCP Checkpoint Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
-    boost::core::string_view nuanceId;
+    std::vector<unsigned char> nuanceId;
     uint256 hash;
     bool nuanceSatisfied;
 
@@ -214,9 +214,9 @@ public:
 public:
     // MCP Transfer Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
-    boost::core::string_view nuanceId;
+    std::vector<unsigned char> nuanceId;
     uint256 toWallet;
 
 

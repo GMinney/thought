@@ -31,10 +31,10 @@ public:
 public:
     // Nuance Registration Fields
     CService ipAddress;
-    boost::core::string_view mcpId; 
+    std::vector<unsigned char> mcpId; 
     uint16_t version;    
     std::vector<unsigned char> name; 
-    boost::core::string_view conceptId; 
+    std::vector<unsigned char> conceptId; 
     uint256 hash; 
 
 public:
@@ -64,11 +64,11 @@ class CNuUnregTx
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-    enum NuUnregAction {
+    enum {
         KILL = 0
     };
 
-    enum NuUnregPostAction {
+    enum {
         DELETE = 0,
         RETURN_TO_ORIGIN = 1,
         ARCHIVE = 2
@@ -77,11 +77,11 @@ public:
 public:
     // Nuance Unregister Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
-    boost::core::string_view nuanceId; 
-    NuUnregAction action; 
-    NuUnregPostAction postAction; 
+    std::vector<unsigned char> nuanceId;
+    uint16_t action{KILL};
+    uint16_t postAction{DELETE};
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -114,10 +114,10 @@ public:
 public:
     // Nuance Authorization Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
-    uint16_t version;    
-    boost::core::string_view nuanceId; 
-    uint256 authorizeWallet; 
+    std::vector<unsigned char> mcpId;
+    uint16_t version;
+    std::vector<unsigned char> nuanceId;
+    uint256 authorizeWallet;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -149,10 +149,10 @@ public:
 public:
     // Nuance revoke authorization Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
-    uint16_t version;    
-    boost::core::string_view nuanceId; 
-    uint256 revokeWallet; 
+    std::vector<unsigned char> mcpId;
+    uint16_t version;
+    std::vector<unsigned char> nuanceId;
+    uint256 revokeWallet;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -184,11 +184,11 @@ public:
 public:
     // Nuance Checkpoint Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
-    uint16_t version;    
-    boost::core::string_view nuanceId; 
-    uint256 hash; 
-    bool nuanceSatisfied; 
+    std::vector<unsigned char> mcpId;
+    uint16_t version;
+    std::vector<unsigned char> nuanceId;
+    uint256 hash;
+    bool nuanceSatisfied;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -221,9 +221,9 @@ public:
 public:
     // Nuance transfer Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
-    uint16_t version;    
-    boost::core::string_view nuanceId; 
+    std::vector<unsigned char> mcpId;
+    uint16_t version;
+    std::vector<unsigned char> nuanceId;
     uint256 toWallet;
 
 public:

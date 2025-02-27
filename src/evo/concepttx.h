@@ -30,14 +30,14 @@ public:
 public:
     // Concept Registration Fields
     CService ipAddress;
-    boost::core::string_view mcpId;
+    std::vector<unsigned char> mcpId;
     uint16_t version;
     std::vector<unsigned char> name;
-    boost::core::string_view conceptId;
+    std::vector<unsigned char> conceptId;
     uint256 conceptHash;
-    boost::core::string_view conceptParentId;
+    std::vector<unsigned char> conceptParentId;
     std::vector<unsigned char> conceptVersion;
-    boost::core::string_view codeLocation;
+    std::vector<unsigned char> codeLocation;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -69,16 +69,16 @@ class CConUnregTx
 public:
     static const uint16_t CURRENT_VERSION = 1;
 
-    enum ConUnregAction {
+    enum {
         DELETE = 0,
         HIDE = 1
     };
 
 public:
     // Concept un-register Fields
-    boost::core::string_view conceptId; 
-    std::vector<unsigned char> conceptVersion; 
-    ConUnregAction action; 
+    std::vector<unsigned char> conceptId;
+    std::vector<unsigned char> conceptVersion;
+    uint16_t action{DELETE};
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -107,7 +107,7 @@ public:
 
 public:
     // Concept user authorization Fields
-    boost::core::string_view conceptId;
+    std::vector<unsigned char> conceptId;
     std::vector<unsigned char> conceptVersion;
     uint256 authorizeWallet;
 
@@ -139,7 +139,7 @@ public:
 
 public:
     // Concept revoke authorization Fields
-    boost::core::string_view conceptId;
+    std::vector<unsigned char> conceptId;
     std::vector<unsigned char> conceptVersion;
     uint256 revokeWallet;
 
@@ -171,10 +171,10 @@ public:
 
 public:
     // Concept Update Fields
-    boost::core::string_view conceptId;
-    std::vector<unsigned char> conceptVersion; 
+    std::vector<unsigned char> conceptId;
+    std::vector<unsigned char> conceptVersion;
     uint256 conceptHash;
-    boost::core::string_view codeLocation;
+    std::vector<unsigned char> codeLocation;
 
 public:
     ADD_SERIALIZE_METHODS;
@@ -204,7 +204,7 @@ public:
 
 public:
     // Concept transfer Fields
-    boost::core::string_view conceptId;
+    std::vector<unsigned char> conceptId;
     std::vector<unsigned char> conceptVersion;
     uint256 toWallet;
 

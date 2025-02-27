@@ -107,11 +107,11 @@ bool CheckConRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( ctx.mcpId );
-    if (ctx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( ctx.mcpId );
+    // if (ctx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-mcpId-invalid");
+    // }
 
     // transaction version check
     if (ctx.version == 0 || ctx.version > CConRegTx::CURRENT_VERSION) {
@@ -123,20 +123,20 @@ bool CheckConRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-name");
     }
 
-    // uri check for conceptId
-    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
-    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
-    }
+    // // uri check for conceptId
+    // boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    // if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
+    // }
 
     // conceptHash check - would require the retreval of the concept, then validating it
 
 
-    // conceptParentId check
-    boost::system::result<url_view> conceptParentUri = parse_uri( ctx.conceptParentId );
-    if (ctx.conceptParentId.length() == 0 || conceptParentUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptParentId-invalid");
-    }
+    // // conceptParentId check
+    // boost::system::result<url_view> conceptParentUri = parse_uri( ctx.conceptParentId );
+    // if (ctx.conceptParentId.length() == 0 || conceptParentUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptParentId-invalid");
+    // }
 
     // conceptVersion check
     std::string version_string(ctx.conceptVersion.begin(), ctx.conceptVersion.end());
@@ -145,11 +145,11 @@ bool CheckConRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptVersion-invalid");
     }
 
-    // codeLocation check
-    boost::system::result<url_view> codeLocationUri = parse_uri( ctx.codeLocation );
-    if (ctx.codeLocation.length() == 0 || codeLocationUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-codeLocationUri-invalid");
-    }
+    // // codeLocation check
+    // boost::system::result<url_view> codeLocationUri = parse_uri( ctx.codeLocation );
+    // if (ctx.codeLocation.length() == 0 || codeLocationUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-codeLocationUri-invalid");
+    // }
 
     return true;
 }
@@ -166,11 +166,11 @@ bool CheckConUpTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValida
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-payload");
     }
 
-    // uri check for conceptId
-    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
-    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
-    }
+    // // uri check for conceptId
+    // boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    // if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
+    // }
 
     // conceptHash check - would require the retreval of the concept, then validating it
 
@@ -182,11 +182,11 @@ bool CheckConUpTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValida
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptVersion-invalid");
     }
 
-    // codeLocation check
-    boost::system::result<url_view> codeLocationUri = parse_uri( ctx.codeLocation );
-    if (ctx.codeLocation.length() == 0 || codeLocationUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-codeLocationUri-invalid");
-    }
+    // // codeLocation check
+    // boost::system::result<url_view> codeLocationUri = parse_uri( ctx.codeLocation );
+    // if (ctx.codeLocation.length() == 0 || codeLocationUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-codeLocationUri-invalid");
+    // }
 
     return true;
 }
@@ -213,11 +213,11 @@ bool CheckConUnregTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
     // action check
 
 
-    // conceptId check
-    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
-    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
-    }
+    // // conceptId check
+    // boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    // if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
+    // }
 
     // need to check is not unregistered already, is valid id, version URI string, and action if valid action
 
@@ -242,11 +242,11 @@ bool CheckConXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-version-invalid");
     }
 
-    // uri check for conceptId
-    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
-    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
-    }
+    // // uri check for conceptId
+    // boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    // if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
+    // }
 
     // toWallet check - would require the retreval of the concept, then validating it
 
@@ -264,11 +264,11 @@ bool CheckConAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-payload");
     }
 
-    // uri check for conceptId
-    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
-    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
-    }
+    // // uri check for conceptId
+    // boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    // if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
+    // }
 
     // authorize wallet check
 
@@ -294,11 +294,11 @@ bool CheckConRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CV
         return state.DoS(100, false, REJECT_INVALID, "bad-concepttx-payload");
     }
 
-    // uri check for conceptId
-    boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
-    if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
-    }
+    // // uri check for conceptId
+    // boost::system::result<url_view> conceptUri = parse_uri( ctx.conceptId );
+    // if (ctx.conceptId.length() == 0 || conceptUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-concepttx-conceptId-invalid");
+    // }
 
     // reevoke wallet check
 
@@ -384,9 +384,9 @@ void CConRegTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("name", std::string(name.begin(), name.end())));
     obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
     obj.push_back(Pair("conceptHash", conceptHash.ToString()));
-    obj.push_back(Pair("conceptParentId", conceptParentId));
+    obj.push_back(Pair("conceptParentId", std::string(conceptParentId.begin(), conceptParentId.end())));
     obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
-    obj.push_back(Pair("codeLocation", codeLocation));
+    obj.push_back(Pair("codeLocation", std::string(codeLocation.begin(), codeLocation.end())));
 }
 
 void CConUnregTx::ToJson(UniValue& obj) const
@@ -423,7 +423,7 @@ void CConUpTx::ToJson(UniValue& obj) const
     obj.push_back(Pair("conceptId", std::string(conceptId.begin(), conceptId.end())));
     obj.push_back(Pair("conceptVersion", std::string(conceptVersion.begin(), conceptVersion.end())));
     obj.push_back(Pair("conceptHash", conceptHash.ToString()));
-    obj.push_back(Pair("codeLocation", codeLocation));
+    obj.push_back(Pair("codeLocation", std::string(codeLocation.begin(), codeLocation.end())));
 }
 
 void CConXferTx::ToJson(UniValue& obj) const

@@ -108,11 +108,11 @@ bool CheckMcpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
-    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    // if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    // }
 
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpRegTx::CURRENT_VERSION) {
@@ -143,11 +143,11 @@ bool CheckMcpUnregTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
-    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    // if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    // }
 
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpUnregTx::CURRENT_VERSION) {
@@ -177,22 +177,22 @@ bool CheckMcpAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
-    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    // if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    // }
 
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpAuthTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // uri check for nuanceId
-    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
-    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
-    }
+    // // uri check for nuanceId
+    // boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    // if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    // }
 
     // authorize wallet check
 
@@ -215,22 +215,22 @@ bool CheckMcpRevAuthTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CV
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
-    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    // if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    // }
 
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpRevAuthTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // uri check for nuanceId
-    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
-    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
-    }
+    // // uri check for nuanceId
+    // boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    // if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    // }
 
     // revoke wallet check
 
@@ -254,22 +254,22 @@ bool CheckMcpCheckTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
-    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    // if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    // }
 
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpCheckTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // uri check for nuanceId
-    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
-    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
-    }
+    // // uri check for nuanceId
+    // boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    // if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    // }
 
     // hash check
 
@@ -294,22 +294,22 @@ bool CheckMcpXferTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-ip-invalid");
     }
 
-    // uri check for mcpid
-    boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
-    if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
-    }
+    // // uri check for mcpid
+    // boost::system::result<url_view> mcpUri = parse_uri( mcptx.mcpId );
+    // if (mcptx.mcpId.length() == 0 || mcpUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-mcpId-invalid");
+    // }
 
     // version check
     if (mcptx.version == 0 || mcptx.version > CMcpXferTx::CURRENT_VERSION) {
         return state.DoS(100, false, REJECT_INVALID, "bad-mcptx-version");
     }
 
-    // uri check for nuanceId
-    boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
-    if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
-        return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
-    }
+    // // uri check for nuanceId
+    // boost::system::result<url_view> nuanceUri = parse_uri( mcptx.nuanceId );
+    // if (mcptx.nuanceId.length() == 0 || nuanceUri.has_error()) {
+    //     return state.DoS(10, false, REJECT_INVALID, "bad-mcptx-nuanceUri-invalid");
+    // }
 
     // to wallet check
 
